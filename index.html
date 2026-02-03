@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fate Battle - 命运对决</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: #1a1a2e; 
+        }
+        #game-container { 
+            border: 3px solid #4a4a6a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script>
+        // 服务器地址（部署后替换）
+        const SERVER_URL = 'http://localhost:3000';
+    </script>
+    <script src="js/config.js"></script>
+    <script src="js/characters.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/network.js"></script>
+    <script src="js/scenes/LobbyScene.js"></script>
+    <script src="js/scenes/CharacterSelectScene.js"></script>
+    <script src="js/scenes/TestScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
