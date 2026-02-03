@@ -15,6 +15,7 @@ class TestScene extends Phaser.Scene {
         this.ubwActive = false;
         this.ubwSwords = [];
         this.ubwDuration = 0;
+        this.projectionBtns = [];
     }
 
     preload() {
@@ -187,12 +188,27 @@ class TestScene extends Phaser.Scene {
         const backBtn = this.add.text(290, uiY + 130, '[返回]', { fontSize: '12px', fill: '#e74c3c' })
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
-                // 清理所有状态
-                this.clearHighlights();
-                this.clearProjectionBtns();
-                if (this.ubwNextTurnBtn) this.ubwNextTurnBtn.destroy();
-                if (this.ubwEndBtn) this.ubwEndBtn.destroy();
-                this.ubwSwords.forEach(s => { if (s.sprite) s.sprite.destroy(); });
+                // 安全清理所有状态
+                if (this.highlightTiles) {
+                    this.highlightTiles.forEach(t => { if (t.highlight) t.highlight.destroy(); });
+                    this.highlightTiles = [];
+                }
+                if (this.projectionBtns) {
+                    this.projectionBtns.forEach(btn => { if (btn) btn.destroy(); });
+                    this.projectionBtns = [];
+                }
+                if (this.ubwNextTurnBtn) {
+                    this.ubwNextTurnBtn.destroy();
+                    this.ubwNextTurnBtn = null;
+                }
+                if (this.ubwEndBtn) {
+                    this.ubwEndBtn.destroy();
+                    this.ubwEndBtn = null;
+                }
+                if (this.ubwSwords) {
+                    this.ubwSwords.forEach(s => { if (s && s.sprite) s.sprite.destroy(); });
+                    this.ubwSwords = [];
+                }
                 this.scene.start('LobbyScene');
             })
             .on('pointerover', function() { this.setStyle({ fill: '#ec7063' }); })
