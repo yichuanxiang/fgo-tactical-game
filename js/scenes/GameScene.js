@@ -285,6 +285,16 @@ class GameScene extends Phaser.Scene {
             { fontSize: '14px', fill: '#aaa' });
         this.actionText = this.add.text(10, uiY + 65, '', 
             { fontSize: '14px', fill: '#ffcc00' });
+        
+        // 在线模式显示房间号
+        if (this.onlineMode && networkManager.roomCode) {
+            this.roomCodeDisplay = this.add.text(
+                GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize - 10, 
+                uiY + 10, 
+                `房间: ${networkManager.roomCode}`, 
+                { fontSize: '14px', fill: '#2ecc71' }
+            ).setOrigin(1, 0);
+        }
     }
 
     createDiceUI() {

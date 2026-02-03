@@ -3,12 +3,13 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 
 // 根据设备调整配置
 if (isMobile) {
-    GAME_CONFIG.tileSize = 36;
+    GAME_CONFIG.tileSize = 32;
+    GAME_CONFIG.mapHeight = 6; // 手机上减少地图高度
 }
 
 // 计算游戏尺寸
-const gameWidth = GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize + (isMobile ? 20 : 250);
-const gameHeight = GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize + (isMobile ? 180 : 150);
+const gameWidth = GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize + (isMobile ? 10 : 250);
+const gameHeight = GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize + (isMobile ? 140 : 150);
 
 // 初始化游戏
 const config = {
