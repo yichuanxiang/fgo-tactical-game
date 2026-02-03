@@ -1288,10 +1288,10 @@ class GameScene extends Phaser.Scene {
             // 已有武器，显示选项
             this.clearSkillButtons();
             this.skillButtons = [];
-            const uiY = GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize + 80;
+            const uiY = GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize + 65;
             
             // 选项1：投掷武器（直线伤害+恢复NP）
-            const btn1 = this.add.text(300, uiY, '[投掷武器]', { fontSize: '14px', fill: '#e74c3c' })
+            const btn1 = this.add.text(200, uiY, '[投掷武器]', { fontSize: '14px', fill: '#e74c3c' })
                 .setInteractive()
                 .on('pointerdown', () => {
                     this.clearSkillButtons();
@@ -1302,7 +1302,7 @@ class GameScene extends Phaser.Scene {
             this.skillButtons.push(btn1);
             
             // 选项2：投影新武器到地图上
-            const btn2 = this.add.text(450, uiY, '[投影武器]', { fontSize: '14px', fill: '#f1c40f' })
+            const btn2 = this.add.text(350, uiY, '[投影新武器]', { fontSize: '14px', fill: '#f1c40f' })
                 .setInteractive()
                 .on('pointerdown', () => {
                     this.clearSkillButtons();

@@ -263,7 +263,7 @@ class TestScene extends Phaser.Scene {
         const uiY = GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize;
         
         // 投掷武器
-        const btn1 = this.add.text(350, uiY + 70, '[投掷]', { fontSize: '12px', fill: '#e74c3c' })
+        const btn1 = this.add.text(200, uiY + 70, '[投掷武器]', { fontSize: '14px', fill: '#e74c3c' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.clearProjectionBtns();
@@ -272,7 +272,7 @@ class TestScene extends Phaser.Scene {
         this.projectionBtns.push(btn1);
         
         // 投影新武器
-        const btn2 = this.add.text(420, uiY + 70, '[投影]', { fontSize: '12px', fill: '#f1c40f' })
+        const btn2 = this.add.text(320, uiY + 70, '[投影新武器]', { fontSize: '14px', fill: '#f1c40f' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.clearProjectionBtns();
