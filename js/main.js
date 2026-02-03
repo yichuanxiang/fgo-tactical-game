@@ -3,20 +3,26 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 
 // 根据设备调整配置
 if (isMobile) {
-    GAME_CONFIG.tileSize = 40;
+    GAME_CONFIG.tileSize = 36;
 }
+
+// 计算游戏尺寸
+const gameWidth = GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize + (isMobile ? 20 : 250);
+const gameHeight = GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize + (isMobile ? 180 : 150);
 
 // 初始化游戏
 const config = {
     type: Phaser.AUTO,
-    width: GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize + (isMobile ? 50 : 250),
-    height: GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize + (isMobile ? 200 : 150),
+    width: gameWidth,
+    height: gameHeight,
     parent: 'game-container',
     backgroundColor: '#1a1a2e',
     scene: [LobbyScene, CharacterSelectScene, TestScene, GameScene],
     scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: gameWidth,
+        height: gameHeight
     }
 };
 
