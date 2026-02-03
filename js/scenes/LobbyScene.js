@@ -5,61 +5,67 @@ class LobbyScene extends Phaser.Scene {
 
     create() {
         const centerX = this.cameras.main.width / 2;
+        const isMobile = this.cameras.main.height < 500;
+        const btnGap = isMobile ? 50 : 70;
+        const startY = isMobile ? 60 : 80;
 
         // 标题
-        this.add.text(centerX, 80, 'Fate Battle', { 
-            fontSize: '48px', 
+        this.add.text(centerX, startY, 'Fate Battle', { 
+            fontSize: isMobile ? '32px' : '48px', 
             fill: '#f1c40f',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        this.add.text(centerX, 130, '命运对决', { 
-            fontSize: '24px', 
+        this.add.text(centerX, startY + 40, '命运对决', { 
+            fontSize: isMobile ? '16px' : '24px', 
             fill: '#fff'
         }).setOrigin(0.5);
 
         // 模式选择
-        this.add.text(centerX, 200, '选择游戏模式', { 
-            fontSize: '20px', 
+        this.add.text(centerX, startY + 80, '选择游戏模式', { 
+            fontSize: isMobile ? '14px' : '20px', 
             fill: '#aaa'
         }).setOrigin(0.5);
 
+        const btnStartY = startY + 120;
+        const fontSize = isMobile ? '16px' : '22px';
+
         // 本地对战按钮
-        this.createButton(centerX, 270, '本地双人对战', () => {
+        this.createButton(centerX, btnStartY, '本地双人对战', fontSize, () => {
             this.scene.start('CharacterSelectScene', { mode: 'local' });
         });
 
         // 测试模式按钮
-        this.createButton(centerX, 340, '测试模式', () => {
+        this.createButton(centerX, btnStartY + btnGap, '测试模式', fontSize, () => {
             this.scene.start('CharacterSelectScene', { testMode: true });
         });
 
         // 创建房间按钮
-        this.createButton(centerX, 410, '创建在线房间', () => {
+        this.createButton(centerX, btnStartY + btnGap * 2, '创建在线房间', fontSize, () => {
             this.showCreateRoom();
         });
 
         // 加入房间按钮
-        this.createButton(centerX, 480, '加入在线房间', () => {
+        this.createButton(centerX, btnStartY + btnGap * 3, '加入在线房间', fontSize, () => {
             this.showJoinRoom();
         });
 
         // 状态文本
-        this.statusText = this.add.text(centerX, 550, '', { 
-            fontSize: '16px', 
+        this.statusText = this.add.text(centerX, btnStartY + btnGap * 4, '', { 
+            fontSize: isMobile ? '12px' : '16px', 
             fill: '#e74c3c'
         }).setOrigin(0.5);
 
         // 房间码显示
-        this.roomCodeText = this.add.text(centerX, 590, '', { 
-            fontSize: '32px', 
+        this.roomCodeText = this.add.text(centerX, btnStartY + btnGap * 4 + 30, '', { 
+            fontSize: isMobile ? '24px' : '32px', 
             fill: '#2ecc71',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
         // 等待文本
-        this.waitingText = this.add.text(centerX, 630, '', { 
-            fontSize: '16px', 
+        this.waitingText = this.add.text(centerX, btnStartY + btnGap * 4 + 60, '', { 
+            fontSize: isMobile ? '12px' : '16px', 
             fill: '#fff'
         }).setOrigin(0.5);
 
@@ -67,9 +73,9 @@ class LobbyScene extends Phaser.Scene {
         this.setupNetworkCallbacks();
     }
 
-    createButton(x, y, text, callback) {
+    createButton(x, y, text, fontSize, callback) {
         const btn = this.add.text(x, y, `[ ${text} ]`, { 
-            fontSize: '22px', 
+            fontSize: fontSize,
             fill: '#3498db'
         })
         .setOrigin(0.5)
