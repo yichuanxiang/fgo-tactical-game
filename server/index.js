@@ -34,9 +34,10 @@ io.on('connection', (socket) => {
     socket.on('createRoom', (playerName) => {
         const roomCode = generateRoomCode();
         rooms.set(roomCode, {
-            players: [{ id: socket.id, name: playerName, team: 'player' }],
+            players: [{ id: socket.id, name: playerName, team: 'player', character: null, ready: false }],
             gameState: null,
-            currentTurn: 'player'
+            currentTurn: 'player',
+            phase: 'waiting' // waiting, selecting, playing
         });
         socket.join(roomCode);
         socket.roomCode = roomCode;
@@ -60,19 +61,55 @@ io.on('connection', (socket) => {
             return;
         }
         
-        room.players.push({ id: socket.id, name: playerName, team: 'enemy' });
+        room.players.push({ id: socket.id, name: playerName, team: 'enemy', character: null, ready: false });
+        room.phase = 'selecting';
         socket.join(roomCode);
         socket.roomCode = roomCode;
         socket.playerTeam = 'enemy';
         
         socket.emit('roomJoined', { roomCode, team: 'enemy' });
         
-        // 通知房间内所有玩家游戏开始
-        io.to(roomCode).emit('gameStart', {
-            players: room.players
+        // 通知双方进入角色选择
+        io.to(roomCode).emit('startCharacterSelect', {
+            players: room.players.map(p => ({ name: p.name, team: p.team }))
         });
         
-        console.log(`玩家加入房间 ${roomCode}`);
+        console.log(`玩家加入房间 ${roomCode}，进入角色选择`);
+    });
+    
+    // 角色选择
+    socket.on('selectCharacter', (characterId) => {
+        const roomCode = socket.roomCode;
+        if (!roomCode) return;
+        
+        const room = rooms.get(roomCode);
+        if (!room) return;
+        
+        const player = room.players.find(p => p.id === socket.id);
+        if (player) {
+            player.character = characterId;
+            player.ready = true;
+            
+            // 通知对方我选了什么
+            socket.to(roomCode).emit('opponentSelected', { 
+                team: player.team, 
+                character: characterId 
+            });
+            
+            // 检查是否双方都选好了
+            if (room.players.every(p => p.ready)) {
+                room.phase = 'playing';
+                io.to(roomCode).emit('gameStart', {
+                    players: room.players.map(p => ({ 
+                        team: p.team, 
+                        character: p.character,
+                        name: p.name
+                    })),
+                    currentTurn: 'player'
+                });
+                console.log(`房间 ${roomCode} 游戏开始`);
+            }
+        }
     });
     
     // 游戏操作同步

@@ -5,7 +5,6 @@ class LobbyScene extends Phaser.Scene {
 
     create() {
         const centerX = this.cameras.main.width / 2;
-        const centerY = this.cameras.main.height / 2;
 
         // 标题
         this.add.text(centerX, 80, 'Fate Battle', { 
@@ -27,7 +26,7 @@ class LobbyScene extends Phaser.Scene {
 
         // 本地对战按钮
         this.createButton(centerX, 270, '本地双人对战', () => {
-            this.scene.start('CharacterSelectScene');
+            this.scene.start('CharacterSelectScene', { mode: 'local' });
         });
 
         // 测试模式按钮
@@ -94,7 +93,6 @@ class LobbyScene extends Phaser.Scene {
     }
 
     async showJoinRoom() {
-        // 创建输入框（使用HTML）
         const roomCode = prompt('请输入6位房间码:');
         if (!roomCode || roomCode.length !== 6) {
             this.statusText.setText('请输入有效的6位房间码');
@@ -122,10 +120,11 @@ class LobbyScene extends Phaser.Scene {
             this.statusText.setText(msg);
         };
 
-        networkManager.onGameStart = (data) => {
-            this.statusText.setText('对手已加入，游戏开始！');
-            this.time.delayedCall(1000, () => {
-                this.scene.start('GameScene', { mode: 'online' });
+        // 对手加入后，进入角色选择界面
+        networkManager.onStartCharacterSelect = (data) => {
+            this.statusText.setText('对手已加入，进入角色选择...');
+            this.time.delayedCall(500, () => {
+                this.scene.start('CharacterSelectScene', { mode: 'online' });
             });
         };
     }

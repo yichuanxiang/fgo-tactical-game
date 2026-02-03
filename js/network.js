@@ -10,6 +10,8 @@ class NetworkManager {
         this.onGameAction = null;
         this.onTurnChanged = null;
         this.onPlayerDisconnected = null;
+        this.onStartCharacterSelect = null;
+        this.onOpponentSelected = null;
     }
 
     // 连接服务器
@@ -48,6 +50,16 @@ class NetworkManager {
                 if (this.onJoinError) this.onJoinError(msg);
             });
             
+            // 开始角色选择
+            this.socket.on('startCharacterSelect', (data) => {
+                if (this.onStartCharacterSelect) this.onStartCharacterSelect(data);
+            });
+            
+            // 对方选择了角色
+            this.socket.on('opponentSelected', (data) => {
+                if (this.onOpponentSelected) this.onOpponentSelected(data);
+            });
+            
             // 游戏开始
             this.socket.on('gameStart', (data) => {
                 if (this.onGameStart) this.onGameStart(data);
@@ -78,6 +90,13 @@ class NetworkManager {
     // 加入房间
     joinRoom(roomCode, playerName) {
         this.socket.emit('joinRoom', { roomCode: roomCode.toUpperCase(), playerName });
+    }
+
+    // 选择角色
+    selectCharacter(characterId) {
+        if (this.socket) {
+            this.socket.emit('selectCharacter', characterId);
+        }
     }
 
     // 发送游戏操作

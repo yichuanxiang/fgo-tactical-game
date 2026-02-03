@@ -17,12 +17,28 @@ class GameScene extends Phaser.Scene {
         this.ubwOwner = null;
         this.ubwDuration = 0;
         this.ubwSwords = [];
+        // 在线模式
+        this.onlineMode = false;
+        this.myTeam = null;
     }
 
     init(data) {
         if (data) {
-            this.player1Char = data.player1 || 'saber_artoria';
-            this.player2Char = data.player2 || 'archer_emiya';
+            this.onlineMode = data.mode === 'online';
+            
+            if (this.onlineMode && data.players) {
+                // 在线模式：从服务器数据获取角色
+                const p1 = data.players.find(p => p.team === 'player');
+                const p2 = data.players.find(p => p.team === 'enemy');
+                this.player1Char = p1 ? p1.character : 'saber_artoria';
+                this.player2Char = p2 ? p2.character : 'archer_emiya';
+                this.myTeam = networkManager.myTeam;
+                this.currentTurn = data.currentTurn || 'player';
+            } else {
+                // 本地模式
+                this.player1Char = data.player1 || 'saber_artoria';
+                this.player2Char = data.player2 || 'archer_emiya';
+            }
         }
         // 重置UBW状态
         this.ubwActive = false;
@@ -59,6 +75,105 @@ class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', () => {
             audioManager.resume();
         });
+        
+        // 在线模式设置
+        if (this.onlineMode) {
+            this.setupOnlineCallbacks();
+            this.updateOnlineTurnDisplay();
+        }
+    }
+
+    setupOnlineCallbacks() {
+        // 收到对方操作
+        networkManager.onGameAction = (action) => {
+            this.handleRemoteAction(action);
+        };
+        
+        // 回合切换
+        networkManager.onTurnChanged = (data) => {
+            this.currentTurn = data.currentTurn;
+            this.startPlayerTurn();
+            this.updateOnlineTurnDisplay();
+        };
+        
+        // 对方断开
+        networkManager.onPlayerDisconnected = () => {
+            this.actionText.setText('对手已断开连接!');
+            this.gameOver = true;
+        };
+    }
+
+    handleRemoteAction(action) {
+        // 处理对方的操作
+        switch (action.type) {
+            case 'move':
+                const unit = this.units.find(u => u.data.team === action.team);
+                if (unit) {
+                    this.moveUnit(unit, action.x, action.y);
+                }
+                break;
+            case 'attack':
+                this.handleRemoteAttack(action);
+                break;
+            case 'skill':
+                this.handleRemoteSkill(action);
+                break;
+            case 'noble':
+                this.handleRemoteNoble(action);
+                break;
+            case 'dice':
+                this.handleRemoteDice(action);
+                break;
+            case 'endTurn':
+                // 回合结束由服务器处理
+                break;
+        }
+    }
+
+    handleRemoteAttack(action) {
+        const attacker = this.units.find(u => u.data.team === action.team);
+        const target = this.units.find(u => u.data.team !== action.team);
+        if (attacker && target) {
+            this.dealDamage(target, action.damage, 'attack');
+            this.addLog(`${attacker.data.name} 攻击造成 ${action.damage} 伤害`);
+        }
+    }
+
+    handleRemoteSkill(action) {
+        const unit = this.units.find(u => u.data.team === action.team);
+        if (unit) {
+            this.addLog(`${unit.data.name} 使用了 ${action.skillName}`);
+            // 技能效果会通过后续的 damage/heal 等 action 同步
+        }
+    }
+
+    handleRemoteNoble(action) {
+        const unit = this.units.find(u => u.data.team === action.team);
+        if (unit) {
+            this.addLog(`${unit.data.name} 发动宝具: ${action.nobleName}`);
+        }
+    }
+
+    handleRemoteDice(action) {
+        this.addLog(`对方掷骰子: ${action.result}`);
+    }
+
+    updateOnlineTurnDisplay() {
+        const isMyTurn = this.currentTurn === this.myTeam;
+        const turnName = this.currentTurn === 'player' ? '玩家1' : '玩家2';
+        
+        if (isMyTurn) {
+            this.turnText.setText(`当前回合: ${turnName} (你的回合)`);
+            this.turnText.setStyle({ fill: '#2ecc71' });
+        } else {
+            this.turnText.setText(`当前回合: ${turnName} (等待对方)`);
+            this.turnText.setStyle({ fill: '#e74c3c' });
+        }
+    }
+
+    isMyTurn() {
+        if (!this.onlineMode) return true;
+        return this.currentTurn === this.myTeam;
     }
 
     createMap() {
@@ -257,6 +372,7 @@ class GameScene extends Phaser.Scene {
     startMoveAction() {
         if (!this.currentUnit || this.currentUnit.data.acted) return;
         if (this.waitingForAction) return;
+        if (this.onlineMode && !this.isMyTurn()) return;
         
         this.actionText.setText('选择移动位置');
         this.showMoveRange(this.currentUnit, this.currentUnit.data.moveRange);
@@ -272,6 +388,17 @@ class GameScene extends Phaser.Scene {
             if (moveTile) {
                 this.addLog(`${this.currentUnit.data.name} 移动到 (${tileX},${tileY})`);
                 this.moveUnit(this.currentUnit, tileX, tileY);
+                
+                // 在线模式同步
+                if (this.onlineMode) {
+                    networkManager.sendAction({
+                        type: 'move',
+                        team: this.currentUnit.data.team,
+                        x: tileX,
+                        y: tileY
+                    });
+                }
+                
                 this.finishAction();
             } else {
                 this.setupMoveInputAndFinish();
@@ -493,6 +620,38 @@ class GameScene extends Phaser.Scene {
     }
 
     startPlayerTurn() {
+        if (this.onlineMode) {
+            // 在线模式：根据当前回合显示
+            const turnName = this.currentTurn === 'player' ? '玩家1' : '玩家2';
+            this.showTurnBanner(`${turnName} 回合`);
+            this.updateOnlineTurnDisplay();
+            
+            // 处理无限剑制效果
+            if (this.ubwActive && this.ubwOwner && this.ubwOwner.data.team === this.currentTurn) {
+                this.processUBWTurn();
+            }
+            
+            // 重置当前回合玩家的单位状态
+            const currentUnits = this.units.filter(u => u.data.team === this.currentTurn);
+            currentUnits.forEach(u => {
+                u.data.acted = false;
+                u.setAlpha(1);
+                if (u.data.silenced > 0) u.data.silenced--;
+            });
+            
+            // 设置对方单位为已行动状态
+            const otherUnits = this.units.filter(u => u.data.team !== this.currentTurn);
+            otherUnits.forEach(u => {
+                u.data.acted = true;
+                u.setAlpha(0.5);
+            });
+            
+            this.turnIndex = 0;
+            this.time.delayedCall(1000, () => this.selectNextUnit());
+            return;
+        }
+        
+        // 本地模式
         this.currentTurn = 'player';
         this.showTurnBanner('玩家1 回合');
         this.turnText.setText('当前回合: 玩家1');
@@ -674,6 +833,7 @@ class GameScene extends Phaser.Scene {
     rollDice() {
         if (!this.currentUnit || this.currentUnit.data.acted) return;
         if (this.waitingForAction) return;
+        if (this.onlineMode && !this.isMyTurn()) return;
         
         audioManager.playDiceRoll();
         
@@ -1764,10 +1924,20 @@ class GameScene extends Phaser.Scene {
     useNoble() {
         if (!this.currentUnit || this.currentUnit.data.np < 100) return;
         if (this.currentUnit.data.acted) return;
+        if (this.onlineMode && !this.isMyTurn()) return;
         
         const noble = this.currentUnit.data.noble;
         this.currentUnit.data.np = 0;
         this.updateUnitBars(this.currentUnit);
+        
+        // 在线模式同步
+        if (this.onlineMode) {
+            networkManager.sendAction({
+                type: 'noble',
+                team: this.currentUnit.data.team,
+                nobleName: noble.name
+            });
+        }
         
         // 检查是否在无限剑制中，且是敌方使用宝具
         if (this.ubwActive && this.ubwOwner && this.currentUnit.data.team !== this.ubwOwner.data.team) {
@@ -2921,6 +3091,16 @@ class GameScene extends Phaser.Scene {
     }
 
     endTurn() {
+        if (this.onlineMode) {
+            // 在线模式：只有轮到自己才能结束回合
+            if (!this.isMyTurn()) return;
+            
+            // 通知服务器回合结束
+            networkManager.endTurn();
+            return;
+        }
+        
+        // 本地模式
         if (this.currentTurn !== 'player') return;
         
         this.units.filter(u => u.data.team === 'player').forEach(u => {
