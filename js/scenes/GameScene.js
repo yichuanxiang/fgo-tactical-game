@@ -45,6 +45,14 @@ class GameScene extends Phaser.Scene {
         this.ubwOwner = null;
         this.ubwDuration = 0;
         this.ubwSwords = [];
+        this.gameOver = false;
+    }
+
+    // 场景关闭前清理，防止Phaser销毁data时报错
+    shutdown() {
+        if (this.units) {
+            this.units.forEach(u => { if (u) u.data = null; });
+        }
     }
 
     preload() {
@@ -636,6 +644,9 @@ class GameScene extends Phaser.Scene {
             this.showTurnBanner(`${turnName} 回合`);
             this.updateOnlineTurnDisplay();
             
+            // 处理灼烧伤害
+            this.processBurnDamage(this.currentTurn);
+            
             // 处理无限剑制效果
             if (this.ubwActive && this.ubwOwner && this.ubwOwner.data.team === this.currentTurn) {
                 this.processUBWTurn();
@@ -667,6 +678,9 @@ class GameScene extends Phaser.Scene {
         this.turnText.setText('当前回合: 玩家1');
         this.addLog('--- 玩家1 回合 ---');
         
+        // 处理灼烧伤害
+        this.processBurnDamage('player');
+        
         // 处理无限剑制效果
         if (this.ubwActive && this.ubwOwner && this.ubwOwner.data.team === 'player') {
             this.processUBWTurn();
@@ -682,6 +696,32 @@ class GameScene extends Phaser.Scene {
         
         this.turnIndex = 0;
         this.time.delayedCall(1000, () => this.selectNextUnit());
+    }
+
+    // 处理灼烧伤害
+    processBurnDamage(team) {
+        const units = this.units.filter(u => u.data.team === team && u.data.burn);
+        units.forEach(unit => {
+            if (unit.data.burn && unit.data.burn.turns > 0) {
+                const burnDmg = unit.data.burn.damage;
+                unit.data.hp -= burnDmg;
+                unit.data.burn.turns--;
+                this.updateUnitBars(unit);
+                this.showDamageNumber(unit, burnDmg);
+                this.addLog(`${unit.data.name} 灼烧伤害 ${burnDmg} (剩余${unit.data.burn.turns}回合)`);
+                
+                if (unit.data.burn.turns <= 0) {
+                    unit.data.burn = null;
+                    this.addLog(`${unit.data.name} 灼烧效果结束`);
+                }
+                
+                if (unit.data.hp <= 0) {
+                    this.addLog(`${unit.data.name} 被灼烧击败!`);
+                    audioManager.playDeath();
+                    this.destroyUnit(unit);
+                }
+            }
+        });
     }
 
     showTurnBanner(text) {
@@ -1082,6 +1122,169 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    // 阿瓦隆：护盾+治疗
+    rollForAvalon(skill) {
+        let rolls = 0;
+        const rollAnim = this.time.addEvent({
+            delay: 80,
+            callback: () => {
+                const tempRoll = Phaser.Math.Between(1, 6);
+                this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][tempRoll - 1]);
+                rolls++;
+                if (rolls >= 8) {
+                    rollAnim.remove();
+                    const diceResult = Phaser.Math.Between(1, 6);
+                    this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][diceResult - 1]);
+                    
+                    const shieldAmount = diceResult * skill.shieldMult;
+                    const healAmount = diceResult * skill.healMult;
+                    
+                    this.currentUnit.data.shield += shieldAmount;
+                    this.currentUnit.data.hp = Math.min(this.currentUnit.data.maxHp, this.currentUnit.data.hp + healAmount);
+                    this.updateUnitBars(this.currentUnit);
+                    audioManager.playShield();
+                    
+                    this.diceResultText.setText(`骰子: ${diceResult}`);
+                    const msg = `阿瓦隆! +${shieldAmount}护盾, +${healAmount}HP`;
+                    this.actionText.setText(msg);
+                    this.addLog(`${this.currentUnit.data.name} ${msg}`);
+                    this.finishAction();
+                }
+            },
+            loop: true
+        });
+    }
+
+    // 阿瓦隆反馈：受伤时回复
+    rollForAvalonCounter(skill) {
+        let rolls = 0;
+        const rollAnim = this.time.addEvent({
+            delay: 80,
+            callback: () => {
+                const tempRoll = Phaser.Math.Between(1, 6);
+                this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][tempRoll - 1]);
+                rolls++;
+                if (rolls >= 8) {
+                    rollAnim.remove();
+                    const diceResult = Phaser.Math.Between(1, 6);
+                    this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][diceResult - 1]);
+                    
+                    this.currentUnit.data.avalonCounter = diceResult;
+                    audioManager.playShield();
+                    
+                    this.diceResultText.setText(`骰子: ${diceResult}`);
+                    const msg = `阿瓦隆展开! 接下来${diceResult}次受伤回复伤害一半的HP和NP`;
+                    this.actionText.setText(msg);
+                    this.addLog(`${this.currentUnit.data.name} ${msg}`);
+                    this.finishAction();
+                }
+            },
+            loop: true
+        });
+    }
+
+    // 魔力放出：风王铁锤 + 强化攻击
+    startBurstWithHammer(skill) {
+        this.pendingBurstSkill = skill;
+        this.actionText.setText('风王铁锤! 选择攻击方向');
+        this.showLineAttackDirections(this.currentUnit, skill.hammerRange);
+        this.setupHammerInput(skill);
+    }
+
+    setupHammerInput(skill) {
+        this.input.once('pointerdown', (pointer) => {
+            const tileX = Math.floor(pointer.x / GAME_CONFIG.tileSize);
+            const tileY = Math.floor(pointer.y / GAME_CONFIG.tileSize);
+            
+            const dirTile = this.highlightTiles.find(t => t.x === tileX && t.y === tileY && t.type === 'direction');
+            if (dirTile) {
+                this.clearHighlights();
+                this.executeHammer(skill, dirTile.dir);
+            } else {
+                this.setupHammerInput(skill);
+            }
+        });
+    }
+
+    executeHammer(skill, direction) {
+        // 掷骰子
+        let rolls = 0;
+        const rollAnim = this.time.addEvent({
+            delay: 80,
+            callback: () => {
+                const tempRoll = Phaser.Math.Between(1, 6);
+                this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][tempRoll - 1]);
+                rolls++;
+                if (rolls >= 8) {
+                    rollAnim.remove();
+                    const diceResult = Phaser.Math.Between(1, 6);
+                    this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][diceResult - 1]);
+                    this.diceResultText.setText(`骰子: ${diceResult}`);
+                    
+                    // 获取直线上的敌人
+                    const enemies = this.getEnemiesInLine(this.currentUnit, direction, skill.hammerRange);
+                    
+                    if (enemies.length > 0) {
+                        enemies.forEach(enemy => {
+                            const dist = Math.abs(enemy.data.x - this.currentUnit.data.x) + Math.abs(enemy.data.y - this.currentUnit.data.y);
+                            const damage = (6 - dist) * diceResult;
+                            if (damage > 0) {
+                                this.showDamageNumber(enemy, damage);
+                                this.dealDamage(enemy, damage, 'skill');
+                                this.addLog(`风王铁锤击中 ${enemy.data.name}! (6-${dist})×${diceResult}=${damage}伤害`);
+                            }
+                        });
+                        audioManager.playAttack();
+                    } else {
+                        this.addLog('风王铁锤: 无目标');
+                    }
+                    
+                    // 设置后续强化攻击
+                    this.currentUnit.data.burstMode = skill.turns;
+                    this.currentUnit.data.burstAtkBonus = diceResult * skill.multiplier;
+                    this.currentUnit.data.burstRangeBonus = skill.rangeBonus;
+                    
+                    const msg = `风王铁锤完成! 接下来${skill.turns}次攻击范围+${skill.rangeBonus}，伤害+${diceResult * skill.multiplier}`;
+                    this.actionText.setText(msg);
+                    this.addLog(msg);
+                    this.finishAction();
+                }
+            },
+            loop: true
+        });
+    }
+
+    // 直觉：充能+暴击buff
+    rollForIntuition(skill) {
+        let rolls = 0;
+        const rollAnim = this.time.addEvent({
+            delay: 80,
+            callback: () => {
+                const tempRoll = Phaser.Math.Between(1, 6);
+                this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][tempRoll - 1]);
+                rolls++;
+                if (rolls >= 8) {
+                    rollAnim.remove();
+                    const diceResult = Phaser.Math.Between(1, 6);
+                    this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][diceResult - 1]);
+                    
+                    const chargeAmount = diceResult * skill.multiplier;
+                    this.currentUnit.data.np = Math.min(100, this.currentUnit.data.np + chargeAmount);
+                    this.currentUnit.data.critNext = true; // 下次攻击暴击
+                    this.updateUnitBars(this.currentUnit);
+                    this.updateNobleButton();
+                    
+                    this.diceResultText.setText(`骰子: ${diceResult}×${skill.multiplier}`);
+                    const msg = `直觉发动! NP+${chargeAmount}, 下次攻击暴击!`;
+                    this.actionText.setText(msg);
+                    this.addLog(`${this.currentUnit.data.name} ${msg}`);
+                    this.finishAction();
+                }
+            },
+            loop: true
+        });
+    }
+
     clearSkillButtons() {
         if (this.skillButtons) {
             this.skillButtons.forEach(btn => btn.destroy());
@@ -1159,6 +1362,22 @@ class GameScene extends Phaser.Scene {
                 break;
             case 'shieldRoll':
                 this.rollForSkill('shield', skill);
+                break;
+            case 'avalonFull':
+                // 阿瓦隆：护盾+治疗
+                this.rollForAvalon(skill);
+                break;
+            case 'avalonCounter':
+                // 阿瓦隆：受伤反馈
+                this.rollForAvalonCounter(skill);
+                break;
+            case 'burstWithHammer':
+                // 魔力放出：先风王铁锤，再强化攻击
+                this.startBurstWithHammer(skill);
+                break;
+            case 'intuition':
+                // 直觉：充能+暴击
+                this.rollForIntuition(skill);
                 break;
             case 'chargeAndMove':
                 this.currentUnit.data.np = Math.min(100, this.currentUnit.data.np + skill.value);
@@ -1273,7 +1492,16 @@ class GameScene extends Phaser.Scene {
                     this.updateUnitBars(this.currentUnit);
                     audioManager.playShield();
                     this.diceResultText.setText(`第${d.roAiasCount}层: [${dice1}+${dice2}+${d.roAiasLastValue - dice1 - dice2}]=${newShield}`);
-                    this.addLog(`${d.name} 七重圆环第${d.roAiasCount}层: +${newShield}护盾 (累计${d.shield})`);
+                    
+                    let msg = `${d.name} 七重圆环第${d.roAiasCount}层: +${newShield}护盾 (累计${d.shield})`;
+                    
+                    // 满7层时获得宝具免疫
+                    if (d.roAiasCount >= 7) {
+                        d.nobleImmune = true;
+                        msg += ' [满层! 免疫一次宝具伤害]';
+                    }
+                    
+                    this.addLog(msg);
                     this.finishAction();
                 }
             },
@@ -1350,26 +1578,26 @@ class GameScene extends Phaser.Scene {
     projectThrowWeapon() {
         const d = this.currentUnit.data;
         
-        // 掷4次骰子决定伤害
+        // 掷6次骰子决定伤害（加强为6d6）
         let rolls = 0;
         let diceResults = [];
         const rollAnim = this.time.addEvent({
-            delay: 80,
+            delay: 60,
             callback: () => {
                 const tempRoll = Phaser.Math.Between(1, 6);
                 this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][tempRoll - 1]);
                 this.diceDisplay.setVisible(true);
                 rolls++;
                 
-                // 每8次记录一个骰子结果
-                if (rolls === 8 || rolls === 16 || rolls === 24 || rolls === 32) {
+                // 每6次记录一个骰子结果
+                if (rolls % 6 === 0 && diceResults.length < 6) {
                     diceResults.push(Phaser.Math.Between(1, 6));
                 }
                 
-                if (rolls >= 32) {
+                if (rolls >= 36) {
                     rollAnim.remove();
                     
-                    // 伤害 = 骰子1 + 骰子2 + 骰子3 + 骰子4
+                    // 伤害 = 6d6
                     const totalDamage = diceResults.reduce((a, b) => a + b, 0);
                     d.projectedWeapon = false;
                     d.projectionBonus = 0;
@@ -1469,17 +1697,20 @@ class GameScene extends Phaser.Scene {
                 sword.setDisplaySize(GAME_CONFIG.tileSize - 10, GAME_CONFIG.tileSize - 10);
                 sword.setOrigin(0.5);
                 
+                // 3d6伤害（加强）
+                const swordDamage = Phaser.Math.Between(1, 6) + Phaser.Math.Between(1, 6) + Phaser.Math.Between(1, 6);
+                
                 // 初始化ubwSwords数组（如果不存在）
                 if (!this.ubwSwords) this.ubwSwords = [];
                 this.ubwSwords.push({ 
                     x: tileX, 
                     y: tileY, 
                     sprite: sword, 
-                    damage: Phaser.Math.Between(8, 15),
+                    damage: swordDamage,
                     owner: this.currentUnit
                 });
                 
-                this.addLog(`${this.currentUnit.data.name} 在 (${tileX},${tileY}) 投影了武器`);
+                this.addLog(`${this.currentUnit.data.name} 在 (${tileX},${tileY}) 投影了武器 (伤害:${swordDamage})`);
                 this.finishAction();
             } else {
                 this.setupWeaponPlaceInput();
@@ -1539,18 +1770,33 @@ class GameScene extends Phaser.Scene {
             
             const dirTile = this.highlightTiles.find(t => t.x === tileX && t.y === tileY && t.type === 'direction');
             if (dirTile) {
-                const damage = Phaser.Math.Between(1, 6);
+                // 3d6伤害（加强）
+                const dice1 = Phaser.Math.Between(1, 6);
+                const dice2 = Phaser.Math.Between(1, 6);
+                const dice3 = Phaser.Math.Between(1, 6);
+                let damage = dice1 + dice2 + dice3;
+                
+                // 最后一击双倍伤害
+                const isLastHit = this.tripleStrikeCount === 1;
+                if (isLastHit) {
+                    damage *= 2;
+                }
+                
                 this.tripleStrikeDamages.push(damage);
                 this.tripleStrikeCount--;
                 
-                // 恢复等量NP
-                this.currentUnit.data.np = Math.min(100, this.currentUnit.data.np + damage);
-                this.tripleStrikeNp += damage;
+                // 恢复等量NP（基于原始伤害）
+                const npGain = isLastHit ? damage / 2 : damage;
+                this.currentUnit.data.np = Math.min(100, this.currentUnit.data.np + npGain);
+                this.tripleStrikeNp += npGain;
                 this.updateUnitBars(this.currentUnit);
                 this.updateNobleButton();
                 
                 // 获取直线上的敌人
                 const enemies = this.getEnemiesInLine(this.currentUnit, dirTile.dir);
+                
+                const hitNum = 3 - this.tripleStrikeCount;
+                const diceStr = `[${dice1}+${dice2}+${dice3}]${isLastHit ? '×2' : ''}`;
                 
                 if (enemies.length > 0) {
                     enemies.forEach(enemy => {
@@ -1558,9 +1804,9 @@ class GameScene extends Phaser.Scene {
                         this.dealDamage(enemy, damage, 'skill');
                     });
                     audioManager.playAttack();
-                    this.addLog(`鹤翼第${3 - this.tripleStrikeCount}击: ${damage}伤害×${enemies.length}人, +${damage}NP`);
+                    this.addLog(`鹤翼第${hitNum}击: ${diceStr}=${damage}伤害×${enemies.length}人, +${npGain}NP${isLastHit ? ' [终结]' : ''}`);
                 } else {
-                    this.addLog(`鹤翼第${3 - this.tripleStrikeCount}击: 无目标, +${damage}NP`);
+                    this.addLog(`鹤翼第${hitNum}击: 无目标, +${npGain}NP`);
                 }
                 
                 if (this.tripleStrikeCount > 0) {
@@ -2149,6 +2395,12 @@ class GameScene extends Phaser.Scene {
                 // 范围AOE，伤害用骰子
                 this.rollForNobleAoe(noble, enemies);
                 return;
+            case 'excaliburLine':
+                // 誓约胜利之剑：直线攻击+灼烧
+                this.actionText.setText('誓约胜利之剑! 选择攻击方向');
+                this.showLineAttackDirections(this.currentUnit);
+                this.setupExcaliburLineInput(noble);
+                return;
             case 'unlimitedBladeWorks':
                 // 无限剑制：对范围内所有敌人造成剑雨伤害
                 this.rollForUnlimitedBladeWorks(noble, enemies);
@@ -2678,6 +2930,85 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    // 誓约胜利之剑：直线攻击输入
+    setupExcaliburLineInput(noble) {
+        this.input.once('pointerdown', (pointer) => {
+            const tileX = Math.floor(pointer.x / GAME_CONFIG.tileSize);
+            const tileY = Math.floor(pointer.y / GAME_CONFIG.tileSize);
+            
+            const dirTile = this.highlightTiles.find(t => t.x === tileX && t.y === tileY && t.type === 'direction');
+            if (dirTile) {
+                this.clearHighlights();
+                this.executeExcaliburLine(noble, dirTile.dir);
+            } else {
+                this.setupExcaliburLineInput(noble);
+            }
+        });
+    }
+
+    // 誓约胜利之剑：执行直线攻击
+    executeExcaliburLine(noble, direction) {
+        let rolls = 0;
+        const rollAnim = this.time.addEvent({
+            delay: 80,
+            callback: () => {
+                const tempRoll = Phaser.Math.Between(1, 6);
+                this.diceDisplay.setText(['⚀','⚁','⚂','⚃','⚄','⚅'][tempRoll - 1]);
+                rolls++;
+                if (rolls >= 12) {
+                    rollAnim.remove();
+                    
+                    // 掷多个骰子
+                    const diceCount = noble.diceCount || 4;
+                    const diceRolls = [];
+                    let total = 0;
+                    for (let i = 0; i < diceCount; i++) {
+                        const roll = Phaser.Math.Between(1, 6);
+                        diceRolls.push(roll);
+                        total += roll;
+                    }
+                    const damage = total * (noble.multiplier || 5);
+                    
+                    // 获取直线上的所有敌人
+                    const enemies = this.getEnemiesInLine(this.currentUnit, direction);
+                    let hitCount = 0;
+                    
+                    enemies.forEach(enemy => {
+                        // 无视护盾
+                        if (noble.pierceShield) {
+                            const originalShield = enemy.data.shield;
+                            enemy.data.shield = 0;
+                            this.dealDamage(enemy, damage, 'noble');
+                            enemy.data.shield = originalShield;
+                        } else {
+                            this.dealDamage(enemy, damage, 'noble');
+                        }
+                        
+                        // 添加灼烧效果
+                        if (noble.burnDamage && noble.burnTurns && enemy.data.hp > 0) {
+                            enemy.data.burn = {
+                                damage: noble.burnDamage,
+                                turns: noble.burnTurns
+                            };
+                            this.addLog(`${enemy.data.name} 被灼烧! ${noble.burnTurns}回合每回合${noble.burnDamage}伤害`);
+                        }
+                        
+                        this.showDamageNumber(enemy, damage);
+                        hitCount++;
+                    });
+                    
+                    audioManager.playNoble();
+                    this.diceResultText.setText(`[${diceRolls.join('+')}]×${noble.multiplier}`);
+                    const nobleMsg = `${this.currentUnit.data.name} 发动 ${noble.name}! ${hitCount}人受到${damage}伤害+灼烧`;
+                    this.actionText.setText(nobleMsg);
+                    this.addLog(nobleMsg);
+                    this.finishAction();
+                }
+            },
+            loop: true
+        });
+    }
+
     knockbackUnit(target, attacker, distance) {
         // 计算击退方向（从攻击者指向目标）
         const dx = Math.sign(target.data.x - attacker.data.x);
@@ -2906,6 +3237,13 @@ class GameScene extends Phaser.Scene {
 
     // damageType: 'attack'=普攻, 'skill'=技能, 'noble'=宝具
     dealDamage(unit, damage, damageType = 'attack') {
+        // 七重圆环满层：免疫宝具伤害
+        if (unit.data.nobleImmune && damageType === 'noble') {
+            unit.data.nobleImmune = false;
+            this.addLog(`${unit.data.name} 七重圆环发动，免疫宝具伤害!`);
+            return;
+        }
+        
         // 对魔力：免疫技能伤害
         if (unit.data.magicImmune && damageType === 'skill') {
             unit.data.magicImmune = false;
@@ -2932,6 +3270,15 @@ class GameScene extends Phaser.Scene {
                 this.addLog(`${unit.data.name} 护盾破碎`);
                 unit.data.shield = 0;
             }
+        }
+        
+        // 阿瓦隆反馈：受伤时回复
+        if (unit.data.avalonCounter && unit.data.avalonCounter > 0) {
+            const recover = Math.floor(damage / 2);
+            unit.data.hp = Math.min(unit.data.maxHp, unit.data.hp + recover);
+            unit.data.np = Math.min(100, unit.data.np + recover);
+            unit.data.avalonCounter--;
+            this.addLog(`${unit.data.name} 阿瓦隆反馈! 回复${recover}HP和${recover}NP (剩余${unit.data.avalonCounter}次)`);
         }
         
         unit.data.hp -= damage;
@@ -3127,6 +3474,9 @@ class GameScene extends Phaser.Scene {
         this.turnText.setText('当前回合: 玩家2');
         this.addLog('--- 玩家2 回合 ---');
         
+        // 处理灼烧伤害
+        this.processBurnDamage('enemy');
+        
         // 处理无限剑制效果（如果是敌方的UBW）
         if (this.ubwActive && this.ubwOwner && this.ubwOwner.data.team === 'enemy') {
             this.processUBWTurn();
@@ -3268,6 +3618,8 @@ class GameScene extends Phaser.Scene {
     }
 
     showGameOver(text, color) {
+        this.gameOver = true;
+        
         const overlay = this.add.rectangle(
             GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize / 2,
             GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize / 2,
@@ -3275,14 +3627,32 @@ class GameScene extends Phaser.Scene {
             GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize,
             0x000000, 0.7
         );
+        overlay.setDepth(200);
         
-        this.add.text(
+        const colorHex = '#' + color.toString(16).padStart(6, '0');
+        const winText = this.add.text(
             GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize / 2,
-            GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize / 2,
+            GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize / 2 - 40,
             text,
-            { fontSize: '72px', fill: '#' + color.toString(16), fontStyle: 'bold' }
+            { fontSize: '48px', fill: colorHex, fontStyle: 'bold' }
         ).setOrigin(0.5);
+        winText.setDepth(201);
         
-        this.input.removeAllListeners();
+        // 返回大厅按钮
+        const scene = this;
+        const backBtn = this.add.text(
+            GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize / 2,
+            GAME_CONFIG.mapHeight * GAME_CONFIG.tileSize / 2 + 40,
+            '[ 返回大厅 ]',
+            { fontSize: '24px', fill: '#3498db' }
+        ).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        backBtn.setDepth(201);
+        
+        backBtn.on('pointerover', () => backBtn.setStyle({ fill: '#5dade2' }));
+        backBtn.on('pointerout', () => backBtn.setStyle({ fill: '#3498db' }));
+        backBtn.on('pointerdown', () => {
+            scene.shutdown();
+            scene.scene.start('LobbyScene');
+        });
     }
 }
