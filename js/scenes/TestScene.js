@@ -164,19 +164,40 @@ class TestScene extends Phaser.Scene {
         
         // 控制按钮
         this.add.text(10, uiY + 130, '[移动]', { fontSize: '12px', fill: '#2ecc71' })
-            .setInteractive()
+            .setInteractive({ useHandCursor: true })
+            .setDepth(100)
             .on('pointerdown', () => this.startMove())
             .on('pointerover', function() { this.setStyle({ fill: '#58d68d' }); })
             .on('pointerout', function() { this.setStyle({ fill: '#2ecc71' }); });
         
         this.add.text(80, uiY + 130, '[重置HP/NP]', { fontSize: '12px', fill: '#2ecc71' })
-            .setInteractive().on('pointerdown', () => this.resetStats());
+            .setInteractive({ useHandCursor: true })
+            .setDepth(100)
+            .on('pointerdown', () => this.resetStats())
+            .on('pointerover', function() { this.setStyle({ fill: '#58d68d' }); })
+            .on('pointerout', function() { this.setStyle({ fill: '#2ecc71' }); });
         
         this.add.text(190, uiY + 130, '[重置假人]', { fontSize: '12px', fill: '#2ecc71' })
-            .setInteractive().on('pointerdown', () => this.resetDummy());
+            .setInteractive({ useHandCursor: true })
+            .setDepth(100)
+            .on('pointerdown', () => this.resetDummy())
+            .on('pointerover', function() { this.setStyle({ fill: '#58d68d' }); })
+            .on('pointerout', function() { this.setStyle({ fill: '#2ecc71' }); });
         
-        this.add.text(290, uiY + 130, '[返回]', { fontSize: '12px', fill: '#e74c3c' })
-            .setInteractive().on('pointerdown', () => this.scene.start('LobbyScene'));
+        const backBtn = this.add.text(290, uiY + 130, '[返回]', { fontSize: '12px', fill: '#e74c3c' })
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                // 清理所有状态
+                this.clearHighlights();
+                this.clearProjectionBtns();
+                if (this.ubwNextTurnBtn) this.ubwNextTurnBtn.destroy();
+                if (this.ubwEndBtn) this.ubwEndBtn.destroy();
+                this.ubwSwords.forEach(s => { if (s.sprite) s.sprite.destroy(); });
+                this.scene.start('LobbyScene');
+            })
+            .on('pointerover', function() { this.setStyle({ fill: '#ec7063' }); })
+            .on('pointerout', function() { this.setStyle({ fill: '#e74c3c' }); });
+        backBtn.setDepth(100);
         
         // 日志
         this.logText = this.add.text(GAME_CONFIG.mapWidth * GAME_CONFIG.tileSize + 10, 10, '测试日志:', 
