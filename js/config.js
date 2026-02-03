@@ -3,6 +3,9 @@ const TILE_SIZE = 64;
 const MAP_WIDTH = 12;
 const MAP_HEIGHT = 8;
 
+// 服务器地址
+const SERVER_URL = 'https://fgo-tactical-game.onrender.com';
+
 const GAME_CONFIG = {
     tileSize: TILE_SIZE,
     mapWidth: MAP_WIDTH,
