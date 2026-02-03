@@ -683,12 +683,18 @@ class TestScene extends Phaser.Scene {
             this.addLog(`剩余${this.ubwSwords.length}把剑，恢复${npGain}NP`);
             
             // 销毁所有剑
-            this.ubwSwords.forEach(s => s.sprite.destroy());
+            this.ubwSwords.forEach(s => {
+                if (s.sprite) s.sprite.destroy();
+            });
         }
         
         this.ubwSwords = [];
         this.ubwActive = false;
         this.ubwDuration = 0;
+        this.isMoving = false;
+        
+        // 清除高亮
+        this.clearHighlights();
         
         // 恢复地图
         this.restoreMapFromUBW();
