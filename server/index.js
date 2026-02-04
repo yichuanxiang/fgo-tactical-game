@@ -124,12 +124,22 @@ io.on('connection', (socket) => {
     // 回合结束
     socket.on('turnEnd', (data) => {
         const roomCode = socket.roomCode;
-        if (!roomCode) return;
+        console.log(`收到turnEnd请求, roomCode: ${roomCode}, socketId: ${socket.id}`);
+        
+        if (!roomCode) {
+            console.log('错误: 没有roomCode');
+            return;
+        }
         
         const room = rooms.get(roomCode);
         if (room) {
+            const oldTurn = room.currentTurn;
             room.currentTurn = room.currentTurn === 'player' ? 'enemy' : 'player';
+            console.log(`回合切换: ${oldTurn} -> ${room.currentTurn}`);
             io.to(roomCode).emit('turnChanged', { currentTurn: room.currentTurn });
+            console.log(`已广播turnChanged到房间 ${roomCode}`);
+        } else {
+            console.log('错误: 房间不存在');
         }
     });
     
