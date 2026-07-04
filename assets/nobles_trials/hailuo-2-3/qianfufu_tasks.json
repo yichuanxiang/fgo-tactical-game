@@ -1,0 +1,53 @@
+{
+  "saber_artoria": {
+    "character": "saber_artoria",
+    "displayName": "Saber Artoria",
+    "nobleName": "Excalibur",
+    "referencePath": "assets/characters/saber_artoria-removebg-preview.png",
+    "referenceUrl": null,
+    "model": "MiniMax-Hailuo-2.3",
+    "provider": "minimax",
+    "payload": {
+      "model": "MiniMax-Hailuo-2.3",
+      "prompt": "Anime game ultimate attack video, 6 seconds. Use the reference image as the exact character identity and costume base. Saber Artoria lifts a holy golden sword, a massive Excalibur beam tears across a dark battlefield, blue armor rim light, gold particles, cinematic camera push-in, dramatic wind, high contrast, clean 2D anime finish. Keep the face and outfit consistent with the reference image. No subtitles, no UI, no watermark.",
+      "duration": 6,
+      "resolution": "768P",
+      "prompt_optimizer": true
+    },
+    "updatedAt": "2026-06-18T15:47:49.704Z",
+    "createStatusCode": 200,
+    "createResponse": {
+      "task_id": "410600601821584",
+      "status": "Preparing",
+      "base_resp": {
+        "status_code": 0,
+        "status_msg": "success"
+      }
+    },
+    "id": "410600601821584",
+    "status": "success",
+    "queryStatusCode": 200,
+    "queryResponse": {
+      "base_resp": {
+        "status_code": 0,
+        "status_msg": "success"
+      },
+      "video_width": 768,
+      "video_height": 1012,
+      "file": {
+        "file_id": 410503070540210,
+        "bytes": 0,
+        "created_at": 1781797613,
+        "filename": "output_aigc.mp4",
+        "purpose": "video_generation",
+        "download_url": "https://public-cdn-video-data-algeng.oss-cn-wulanchabu.aliyuncs.com/inference_output%2Fvideo%2F2026-06-18%2F138489d4-593a-4c07-b4ed-f3ff11ce9502%2Foutput_aigc.mp4?Expires=1781830065&OSSAccessKeyId=LTAI5tAmwsjSaaZVA6cEFAUu&Signature=giYY08yP8615lpsaVFEY%2FK6WmTo%3D",
+        "backup_download_url": ""
+      },
+      "status": "Success",
+      "file_id": "410503070540210",
+      "task_id": "410600601821584"
+    },
+    "videoUrl": "https://public-cdn-video-data-algeng.oss-cn-wulanchabu.aliyuncs.com/inference_output%2Fvideo%2F2026-06-18%2F138489d4-593a-4c07-b4ed-f3ff11ce9502%2Foutput_aigc.mp4?Expires=1781830065&OSSAccessKeyId=LTAI5tAmwsjSaaZVA6cEFAUu&Signature=giYY08yP8615lpsaVFEY%2FK6WmTo%3D",
+    "outputPath": "assets/nobles_trials/hailuo-2-3/saber_artoria.mp4"
+  }
+}

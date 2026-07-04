@@ -1,0 +1,221 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=960,initial-scale=1.0"><title>Fate Battle · 华丽版</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a1a;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+
+.game{width:960px;height:540px;position:relative;overflow:hidden;font-family:'Noto Sans SC',sans-serif;color:#d0c8b8;background:radial-gradient(ellipse at 50% 30%,#1a1e35 0%,#0e101d 60%,#080a14 100%)}
+
+/* 粒子层 */
+.particles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.particle{position:absolute;border-radius:50%;animation:float linear infinite;opacity:0}
+@keyframes float{0%{transform:translateY(0) scale(1);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-560px) scale(0.3);opacity:0}}
+
+/* 金色微粒 */
+.p-gold{background:radial-gradient(circle,#e8c95c 0%,transparent 70%);width:3px;height:3px;box-shadow:0 0 4px rgba(200,170,80,0.4)}
+.p-white{background:radial-gradient(circle,#fff 0%,transparent 70%);width:2px;height:2px;box-shadow:0 0 3px rgba(255,255,255,0.2)}
+
+/* 装饰线 */
+.ornament{position:absolute;pointer-events:none}
+.ornament-line{height:1px;background:linear-gradient(90deg,transparent,rgba(200,170,80,0.3) 20%,rgba(200,170,80,0.5) 50%,rgba(200,170,80,0.3) 80%,transparent)}
+.ornament-dot{width:3px;height:3px;background:#c8aa50;border-radius:50%}
+
+/* 角标装饰 */
+.corner{position:absolute;width:12px;height:12px;pointer-events:none}
+.corner::before,.corner::after{content:'';position:absolute;background:#c8aa50}
+.corner-tl{top:0;left:0}.corner-tl::before{top:0;left:0;width:100%;height:1px}.corner-tl::after{top:0;left:0;width:1px;height:100%}
+.corner-tr{top:0;right:0}.corner-tr::before{top:0;right:0;width:100%;height:1px}.corner-tr::after{top:0;right:0;width:1px;height:100%}
+.corner-bl{bottom:0;left:0}.corner-bl::before{bottom:0;left:0;width:100%;height:1px}.corner-bl::after{bottom:0;left:0;width:1px;height:100%}
+.corner-br{bottom:0;right:0}.corner-br::before{bottom:0;right:0;width:100%;height:1px}.corner-br::after{bottom:0;right:0;width:1px;height:100%}
+
+/* ═══ LOBBY ═══ */
+.lobby{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;position:relative}
+
+/* 角色剪影 */
+.side-char{position:absolute;bottom:20px;pointer-events:none}
+.side-char.left{left:30px}
+.side-char.right{right:30px}
+.side-char .img{width:70px;height:150px;background:linear-gradient(180deg,rgba(90,130,200,0.08) 0%,rgba(90,130,200,0.03) 80%,transparent);border-left:1px solid rgba(90,130,200,0.12);border-right:1px solid rgba(90,130,200,0.12)}
+.side-char.right .img{background:linear-gradient(180deg,rgba(200,90,80,0.08) 0%,rgba(200,90,80,0.03) 80%,transparent);border-color:rgba(200,90,80,0.12)}
+.side-char .label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.4em;text-align:center;margin-top:10px;color:rgba(255,255,255,0.12)}
+
+/* 标题区域 */
+.title-zone{position:relative;margin-top:80px;text-align:center}
+.title-zone .ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(200,170,80,0.08);border-radius:50%;animation:ringPulse 3s ease-in-out infinite}
+.title-zone .ring.r1{width:160px;height:160px;animation-delay:0s}
+.title-zone .ring.r2{width:220px;height:220px;animation-delay:0.5s}
+.title-zone .ring.r3{width:300px;height:300px;animation-delay:1s}
+@keyframes ringPulse{0%,100%{opacity:0.15;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.4;transform:translate(-50%,-50%) scale(1.03)}}
+
+.title-zone .fate{font-family:'Cinzel',serif;font-size:50px;font-weight:600;color:#c8aa50;letter-spacing:0.2em;text-shadow:0 0 60px rgba(200,170,80,0.2),0 2px 4px rgba(0,0,0,0.8);position:relative;z-index:2}
+.title-zone .battle{font-family:'Cinzel',serif;font-size:22px;font-weight:400;color:#b55a4a;letter-spacing:0.45em;margin-top:0;position:relative;z-index:2}
+
+/* 装饰线 */
+.deco-line{display:flex;align-items:center;gap:0;margin-top:14px}
+.deco-line .dl{width:70px;height:1px;background:linear-gradient(90deg,transparent,rgba(200,170,80,0.4))}
+.deco-line .dr{width:70px;height:1px;background:linear-gradient(90deg,rgba(200,170,80,0.4),transparent)}
+.deco-line .dd{width:4px;height:4px;background:#c8aa50;transform:rotate(45deg)}
+
+.deco-cn{font-family:'Noto Serif SC',serif;font-size:11px;color:rgba(200,200,200,0.25);letter-spacing:0.6em;margin-top:8px}
+
+/* 按钮 */
+.btn-area{margin-top:50px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.btn-main{width:340px;height:46px;background:linear-gradient(180deg,rgba(20,22,40,0.9) 0%,rgba(14,16,30,0.95) 100%);border:1px solid rgba(200,170,80,0.12);cursor:pointer;display:flex;align-items:center;padding:0 20px;position:relative;transition:all 0.25s;color:#bab09a;font-family:'Noto Sans SC',sans-serif;font-size:15px;font-weight:400;letter-spacing:0.08em}
+.btn-main::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;background:rgba(200,170,80,0.2);transition:all 0.25s}
+.btn-main::after{content:'';position:absolute;left:8px;right:8px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,170,80,0.08) 20%,rgba(200,170,80,0.25) 50%,rgba(200,170,80,0.08) 80%,transparent);opacity:0;transition:opacity 0.25s}
+.btn-main:hover{background:linear-gradient(180deg,rgba(30,34,56,0.95) 0%,rgba(18,22,42,0.95) 100%);border-color:rgba(200,170,80,0.35);color:#e0d5b0}
+.btn-main:hover::before{background:rgba(200,170,80,0.7)}
+.btn-main:hover::after{opacity:1}
+.btn-main .ico{font-family:'Cinzel',serif;font-size:14px;color:rgba(200,170,80,0.35);margin-right:14px;transition:color 0.25s}
+.btn-main:hover .ico{color:rgba(200,170,80,0.7)}
+.btn-main .txt{flex:1}
+.btn-main .arr{font-size:18px;color:rgba(200,170,80,0);transition:all 0.25s;transform:translateX(-8px)}
+.btn-main:hover .arr{color:rgba(200,170,80,0.6);transform:translateX(0)}
+
+.btn-sub-row{display:flex;gap:12px}
+.btn-sub{width:164px;height:40px;background:rgba(14,16,30,0.9);border:1px solid rgba(255,255,255,0.06);cursor:pointer;color:#8a8580;font-family:'Noto Sans SC',sans-serif;font-size:13px;transition:all 0.25s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-sub:hover{background:rgba(24,28,46,0.95);border-color:rgba(200,170,80,0.2);color:#c0b8a0}
+.btn-sub .ico{font-family:'Cinzel',serif;font-size:11px;color:rgba(200,170,80,0.3);transition:color 0.25s}
+.btn-sub:hover .ico{color:rgba(200,170,80,0.6)}
+
+.status-zone{margin-top:30px;text-align:center;min-height:40px}
+.status-zone .code{font-size:22px;font-family:'Courier New',monospace;color:#6aaa6a;letter-spacing:0.3em}
+.status-zone .hint{font-size:11px;color:rgba(255,255,255,0.18);margin-top:6px}
+
+/* ═══ CHAR SELECT ═══ */
+.char-bg{width:100%;height:100%;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 30%,#1a1e35,#0e101d 60%,#080a14)}
+.char-top{height:38px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(200,170,80,0.06);font-size:12px}
+.char-top .back{color:rgba(255,255,255,0.3);cursor:pointer;transition:color 0.2s}
+.char-top .back:hover{color:#c8aa50}
+.char-top .ctitle{flex:1;text-align:center;color:#c8aa50;letter-spacing:0.12em;font-family:'Noto Serif SC',serif;font-size:13px}
+
+.cards-wrap{flex:1;display:flex;align-items:center;justify-content:center;gap:16px;padding:20px}
+
+.chip{width:152px;height:194px;background:linear-gradient(180deg,rgba(20,22,40,0.9),rgba(14,16,32,0.95));border:1px solid rgba(200,170,80,0.08);cursor:pointer;transition:all 0.25s;display:flex;flex-direction:column;align-items:center;padding-top:14px;position:relative}
+.chip:hover{border-color:rgba(200,170,80,0.25);background:linear-gradient(180deg,rgba(26,30,50,0.95),rgba(18,20,40,0.95))}
+.chip.selected{border-color:rgba(200,170,80,0.5);background:linear-gradient(180deg,rgba(28,32,50,0.95),rgba(18,20,38,0.95))}
+
+.chip .cbar{width:136px;height:1px;margin-bottom:14px}
+.chip .cavatar{width:64px;height:64px;border-radius:50%;border:1px solid rgba(200,170,80,0.15);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:10px;background:rgba(0,0,0,0.3)}
+.chip .cname{font-size:13px;color:#d0c8b8;font-weight:500}
+.chip .cclass{font-size:10px;color:#c8aa50;margin-top:2px;letter-spacing:0.06em}
+.chip .cstat{font-size:8px;color:rgba(255,255,255,0.25);margin-top:10px;line-height:1.8;text-align:center}
+
+.chip.selected::after{content:'';position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;border:1px solid rgba(200,170,80,0.3);pointer-events:none}
+
+.char-bottom{height:58px;border-top:1px solid rgba(200,170,80,0.06);display:flex;align-items:center;justify-content:center;gap:80px;padding:0 20px}
+.pslot{text-align:center}
+.pslot .plabel{font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:0.2em;margin-bottom:4px}
+.pslot .pname{font-size:12px;color:#d0c8b8}
+.pslot .pname.empty{color:rgba(255,255,255,0.15)}
+.vs-text{font-family:'Cinzel',serif;font-size:22px;color:rgba(200,170,80,0.2)}
+
+/* ═══ BATTLE ═══ */
+.btl{width:100%;height:100%;position:relative}
+.btl-top{position:absolute;top:0;left:0;right:0;height:30px;background:rgba(8,10,20,0.9);border-bottom:1px solid rgba(200,170,80,0.06);display:flex;align-items:center;padding:0 14px;z-index:10;font-size:11px}
+.btl-top .bback{color:rgba(255,255,255,0.25);cursor:pointer;transition:color 0.2s}
+.btl-top .bback:hover{color:#c8aa50}
+.btl-top .bturn{flex:1;text-align:center;color:#c8aa50;letter-spacing:0.1em;font-size:12px}
+.btl-top .binfo{color:rgba(255,255,255,0.2);font-size:10px}
+
+.btl-map{position:absolute;top:30px;left:0;right:184px;bottom:50px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.1);font-size:13px;letter-spacing:0.1em}
+
+.btl-right{position:absolute;right:0;top:30px;width:184px;bottom:50px;border-left:1px solid rgba(200,170,80,0.06);padding:14px;display:flex;flex-direction:column;gap:6px}
+.btl-right .rname{font-size:12px;color:#d0c8b8;font-weight:500;margin-bottom:4px}
+.btl-right .rrow{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,0.2);margin-bottom:1px}
+.btl-right .hbar{height:6px;background:rgba(255,255,255,0.04);border-radius:1px;overflow:hidden;margin-bottom:4px}
+.btl-right .hfill{height:100%;transition:width 0.5s}
+.btl-right .nbar{height:4px;background:rgba(255,255,255,0.04);border-radius:1px;overflow:hidden;margin-bottom:4px}
+.btl-right .nfill{height:100%;transition:width 0.5s}
+.btl-right .rnoble{font-size:9px;color:rgba(160,130,200,0.5);margin-top:6px}
+.btl-right .raction{font-size:10px;color:rgba(200,170,80,0.5);margin-top:auto}
+
+.btl-bottom{position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(8,10,20,0.92);border-top:1px solid rgba(200,170,80,0.08);display:flex;align-items:center;justify-content:center;gap:10px;padding:0 12px}
+.bbtn{width:82px;height:32px;background:linear-gradient(180deg,rgba(20,22,38,0.9),rgba(14,16,28,0.95));border:1px solid rgba(200,170,80,0.08);cursor:pointer;color:#8a8580;font-family:'Noto Sans SC',sans-serif;font-size:11px;transition:all 0.2s;letter-spacing:0.05em}
+.bbtn:hover{background:linear-gradient(180deg,rgba(28,32,50,0.95),rgba(18,22,38,0.95));border-color:rgba(200,170,80,0.25);color:#c0b8a0}
+.bbtn:active{background:rgba(200,170,80,0.08)}
+.bbtn.active{border-color:rgba(200,170,80,0.4);color:#c8aa50}
+</style></head><body>
+
+<div class="game" id="screen-lobby">
+<div class="particles" id="particles-lobby"></div>
+
+<div class="lobby">
+  <div class="side-char left"><div class="img"></div><div class="label">S A B E R</div></div>
+  <div class="side-char right"><div class="img"></div><div class="label">A R C H E R</div></div>
+
+  <div class="title-zone">
+    <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+    <div class="fate">FATE</div>
+    <div class="battle">BATTLE</div>
+    <div class="deco-line"><div class="dl"></div><div class="dd"></div><div class="dr"></div></div>
+    <div class="deco-cn">命 运 对 决</div>
+  </div>
+
+  <div class="btn-area">
+    <button class="btn-main" onclick="show('screen-char')"><span class="ico">I</span><span class="txt">本地双人对战</span><span class="arr">›</span></button>
+    <button class="btn-main"><span class="ico">II</span><span class="txt">技能测试模式</span><span class="arr">›</span></button>
+    <div class="btn-sub-row">
+      <button class="btn-sub" onclick="show('screen-battle')"><span class="ico">&#9670;</span>创建房间</button>
+      <button class="btn-sub"><span class="ico">&#9670;</span>加入房间</button>
+    </div>
+  </div>
+  <div class="status-zone"><div class="hint">— 选择游戏模式 —</div></div>
+</div>
+</div>
+
+<div class="game" id="screen-char" style="display:none">
+<div class="particles" id="particles-char"></div>
+<div class="char-bg">
+  <div class="char-top"><span class="back" onclick="show('screen-lobby')">&#8592; 返回大厅</span><span class="ctitle">选择角色</span></div>
+  <div class="cards-wrap">
+    <div class="chip selected" onclick="sel(this)"><div class="cbar" style="background:#6a9fd8"></div><div class="cavatar">&#9876;</div><div class="cname">阿尔托莉雅</div><div class="cclass">Saber · 剑阶</div><div class="cstat">移动 3 &nbsp; 射程 2<br>随机 3 ~ 18</div></div>
+    <div class="chip" onclick="sel(this)"><div class="cbar" style="background:#6aaa6a"></div><div class="cavatar">&#127993;</div><div class="cname">卫宫</div><div class="cclass">Archer · 弓阶</div><div class="cstat">移动 2 &nbsp; 射程 4<br>随机 2 ~ 12</div></div>
+    <div class="chip" onclick="sel(this)"><div class="cbar" style="background:#c87090"></div><div class="cavatar">&#128302;</div><div class="cname">何乐为</div><div class="cclass">Caster · 术阶</div><div class="cstat">移动 1 &nbsp; 射程 6<br>随机 3 ~ 18</div></div>
+    <div class="chip" onclick="sel(this)"><div class="cbar" style="background:#c46050"></div><div class="cavatar">&#9876;</div><div class="cname">兰斯洛特</div><div class="cclass">Berserker · 狂阶</div><div class="cstat">移动 3 &nbsp; 射程 1<br>随机 5 ~ 30</div></div>
+  </div>
+  <div class="char-bottom">
+    <div class="pslot"><div class="plabel">P L A Y E R &nbsp; 1</div><div class="pname" style="color:#6a9fd8">阿尔托莉雅</div></div>
+    <div class="vs-text">V S</div>
+    <div class="pslot"><div class="plabel">P L A Y E R &nbsp; 2</div><div class="pname empty">选择中...</div></div>
+  </div>
+</div>
+</div>
+
+<div class="game" id="screen-battle" style="display:none">
+<div class="particles" id="particles-battle"></div>
+<div class="btl">
+  <div class="btl-top"><span class="bback" onclick="show('screen-lobby')">&#8592; 返回</span><span class="bturn">P L A Y E R &nbsp; 1 &nbsp; 回 合</span><span class="binfo">阿尔托莉雅 · Saber</span></div>
+  <div class="btl-map">12 × 8 &nbsp; 战 斗 地 图</div>
+  <div class="btl-right">
+    <div class="rname">阿尔托莉雅</div>
+    <div class="rrow"><span>HP</span><span>78 / 100</span></div>
+    <div class="hbar"><div class="hfill" style="width:78%;background:linear-gradient(90deg,#c46050,#d07060)"></div></div>
+    <div class="rrow"><span>NP</span><span>60 / 100</span></div>
+    <div class="nbar"><div class="nfill" style="width:60%;background:linear-gradient(90deg,#5a90c8,#7ab0e0)"></div></div>
+    <div class="rnoble">宝具 · 誓约胜利之剑</div>
+    <div class="raction">— 选择行动 —</div>
+  </div>
+  <div class="btl-bottom">
+    <button class="bbtn active">移动</button>
+    <button class="bbtn">攻击</button>
+    <button class="bbtn">技能</button>
+    <button class="bbtn">宝具</button>
+    <button class="bbtn">结束</button>
+  </div>
+</div>
+</div>
+
+<script>
+function show(id){document.querySelectorAll('.game').forEach(s=>s.style.display='none');document.getElementById(id).style.display='block';initParticles(id)}
+function sel(el){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected')}
+
+function initParticles(sid){
+  const c=document.getElementById('particles-'+sid.split('-')[1]);
+  if(!c||c.children.length)return;
+  for(let i=0;i<30;i++){const d=document.createElement('div');d.className='particle '+(Math.random()<0.35?'p-gold':'p-white');d.style.left=Math.random()*100+'%';d.style.top=(60+Math.random()*40)+'%';d.style.animationDuration=(8+Math.random()*16)+'s';d.style.animationDelay=Math.random()*12+'s';c.appendChild(d)}
+}
+initParticles('screen-lobby');
+</script>
+</body></html>

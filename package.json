@@ -1,0 +1,30 @@
+{
+  "name": "fate-battle",
+  "version": "1.0.0",
+  "description": "Fate Battle - 命运对决",
+  "main": "index.html",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "noble:dry-run": "node videoGen.js --dry-run",
+    "noble:submit": "node videoGen.js --submit --poll --download",
+    "qff:models": "node testAllModels.js",
+    "sync": "npx cap sync",
+    "android": "npx cap open android",
+    "build:android": "npx cap sync android && npx cap open android"
+  },
+  "keywords": [
+    "game",
+    "phaser",
+    "fate"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "typescript": "^6.0.3"
+  }
+}

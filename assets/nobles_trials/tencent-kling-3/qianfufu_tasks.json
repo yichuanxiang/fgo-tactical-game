@@ -1,0 +1,36 @@
+{
+  "saber_artoria": {
+    "character": "saber_artoria",
+    "displayName": "Saber Artoria",
+    "nobleName": "Excalibur",
+    "referencePath": "assets/characters/saber_artoria-removebg-preview.png",
+    "referenceUrl": "https://d.uguu.se/WyqpMbRy.png",
+    "model": "aigc-video-kling-3.0",
+    "provider": "tencentvod",
+    "payload": {
+      "model_name": "Kling",
+      "model_version": "3.0",
+      "prompt": "Anime game ultimate attack video, 6 seconds. Use the reference image as the exact character identity and costume base. Saber Artoria lifts a holy golden sword, a massive Excalibur beam tears across a dark battlefield, blue armor rim light, gold particles, cinematic camera push-in, dramatic wind, high contrast, clean 2D anime finish. Keep the face and outfit consistent with the reference image. No subtitles, no UI, no watermark.",
+      "output_config": {
+        "resolution": "720P",
+        "duration": 5,
+        "aspect_ratio": "16:9"
+      },
+      "file_infos": [
+        {
+          "type": "url",
+          "category": "Image",
+          "url": "https://d.uguu.se/WyqpMbRy.png"
+        }
+      ]
+    },
+    "updatedAt": "2026-06-18T15:54:32.935Z",
+    "createStatusCode": 503,
+    "createResponse": {
+      "error": {
+        "message": "分组 default 下模型 aigc-video-kling 无可用渠道（distributor） (request id: 202606182354296623773359W4dT4p9)",
+        "type": "new_api_error"
+      }
+    }
+  }
+}

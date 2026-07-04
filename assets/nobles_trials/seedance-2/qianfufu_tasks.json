@@ -1,0 +1,37 @@
+{
+  "saber_artoria": {
+    "character": "saber_artoria",
+    "displayName": "Saber Artoria",
+    "nobleName": "Excalibur",
+    "referencePath": "assets/characters/saber_artoria-removebg-preview.png",
+    "referenceUrl": "https://d.uguu.se/WyqpMbRy.png",
+    "model": "doubao-seedance-2-0-260128",
+    "provider": "seedance2",
+    "payload": {
+      "model": "doubao-seedance-2-0-260128",
+      "content": [
+        {
+          "type": "text",
+          "text": "Anime game ultimate attack video, 6 seconds. Use the reference image as the exact character identity and costume base. Saber Artoria lifts a holy golden sword, a massive Excalibur beam tears across a dark battlefield, blue armor rim light, gold particles, cinematic camera push-in, dramatic wind, high contrast, clean 2D anime finish. Keep the face and outfit consistent with the reference image. No subtitles, no UI, no watermark."
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://d.uguu.se/WyqpMbRy.png"
+          },
+          "role": "first_frame"
+        }
+      ],
+      "size": "1280x720",
+      "duration": 5
+    },
+    "updatedAt": "2026-06-18T15:43:54.410Z",
+    "createStatusCode": 503,
+    "createResponse": {
+      "error": {
+        "message": "分组 default 下模型 doubao-seedance-2-0-260128 无可用渠道（distributor） (request id: 20260618234351133333572XWQB18GE)",
+        "type": "new_api_error"
+      }
+    }
+  }
+}

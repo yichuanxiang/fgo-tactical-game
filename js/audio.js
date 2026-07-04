@@ -42,7 +42,7 @@ class AudioManager {
         osc.stop(this.ctx.currentTime + duration);
     }
 
-    // 骰子滚动音效
+    // 随机数滚动音效
     playDiceRoll() {
         if (!this.enabled) return;
         for (let i = 0; i < 5; i++) {
@@ -52,7 +52,7 @@ class AudioManager {
         }
     }
 
-    // 骰子结果音效
+    // 随机数结果音效
     playDiceResult() {
         this.playTone(523, 0.1, 'sine');
         setTimeout(() => this.playTone(659, 0.1, 'sine'), 100);

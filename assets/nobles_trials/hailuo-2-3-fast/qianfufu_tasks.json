@@ -1,0 +1,27 @@
+{
+  "saber_artoria": {
+    "character": "saber_artoria",
+    "displayName": "Saber Artoria",
+    "nobleName": "Excalibur",
+    "referencePath": "assets/characters/saber_artoria-removebg-preview.png",
+    "referenceUrl": "https://d.uguu.se/WyqpMbRy.png",
+    "model": "MiniMax-Hailuo-2.3-fast",
+    "provider": "minimax",
+    "payload": {
+      "model": "MiniMax-Hailuo-2.3-fast",
+      "prompt": "Anime game ultimate attack video, 6 seconds. Use the reference image as the exact character identity and costume base. Saber Artoria lifts a holy golden sword, a massive Excalibur beam tears across a dark battlefield, blue armor rim light, gold particles, cinematic camera push-in, dramatic wind, high contrast, clean 2D anime finish. Keep the face and outfit consistent with the reference image. No subtitles, no UI, no watermark.",
+      "duration": 6,
+      "resolution": "768P",
+      "prompt_optimizer": true,
+      "first_frame_image": "https://d.uguu.se/WyqpMbRy.png"
+    },
+    "updatedAt": "2026-06-18T15:46:06.855Z",
+    "createStatusCode": 503,
+    "createResponse": {
+      "error": {
+        "message": "分组 default 下模型 MiniMax-Hailuo-2.3-fast 无可用渠道（distributor） (request id: 20260618234603584424543Ia6JDAEF)",
+        "type": "new_api_error"
+      }
+    }
+  }
+}

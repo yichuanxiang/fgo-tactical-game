@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="screen-orientation" content="landscape">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Fate Battle - 命运对决</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a1a2e;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        body { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        #game-container { 
+            border: none;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <script src="js/lib/phaser.min.js?v=2"></script>
+    <script src="js/lib/socket.io.min.js?v=2"></script>
+    <script src="js/uiKit.js?v=3"></script>
+    <script src="js/battleCore.js?v=3"></script>
+    <script src="js/config.js?v=4"></script>
+    <script src="js/buffSystem.js?v=4"></script>
+    <script src="js/characters.js?v=5"></script>
+    <script src="js/audio.js?v=3"></script>
+    <script src="js/sharedSkills.js?v=3"></script>
+    <script src="js/nobleAnimations.js?v=3"></script>
+    <script src="js/nobleCinematics.js?v=5"></script>
+    <script src="js/network.js?v=3"></script>
+    <script src="js/scenes/LobbyScene.js?v=3"></script>
+    <script src="js/scenes/CharacterSelectScene.js?v=3"></script>
+    <script src="js/scenes/TestScene.js?v=3"></script>
+    <script src="js/charSkills_licunxu.js?v=5"></script>
+    <script src="js/scenes/GameScene.js?v=5"></script>
+    <script src="js/gameFx.js?v=4"></script>
+    <script src="js/gameSync.js?v=4"></script>
+    <script src="js/gameAI.js?v=4"></script>
+    <script src="js/main.js?v=4"></script>
+</body>
+</html>

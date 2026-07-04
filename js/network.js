@@ -6,6 +6,8 @@ class NetworkManager {
         this.myTeam = null;
         this.isHost = false;
         this.connected = false;
+        this.onRoomCreated = null;
+        this.onJoinError = null;
         this.onGameStart = null;
         this.onGameAction = null;
         this.onTurnChanged = null;
@@ -14,20 +16,59 @@ class NetworkManager {
         this.onOpponentSelected = null;
     }
 
+    disconnect(keepCallbacks = false) {
+        if (this.socket) {
+            this.socket.removeAllListeners();
+            this.socket.disconnect();
+            this.socket = null;
+        }
+
+        this.roomCode = null;
+        this.myTeam = null;
+        this.isHost = false;
+        this.connected = false;
+
+        if (!keepCallbacks) {
+            this.onRoomCreated = null;
+            this.onJoinError = null;
+            this.onGameStart = null;
+            this.onGameAction = null;
+            this.onTurnChanged = null;
+            this.onPlayerDisconnected = null;
+            this.onStartCharacterSelect = null;
+            this.onOpponentSelected = null;
+        }
+    }
+
     // 连接服务器
     connect(serverUrl) {
         return new Promise((resolve, reject) => {
+            if (this.socket) {
+                this.disconnect(true);
+            }
+
             this.socket = io(serverUrl);
+            let settled = false;
             
             this.socket.on('connect', () => {
                 this.connected = true;
                 console.log('已连接到服务器');
-                resolve();
+                if (!settled) {
+                    settled = true;
+                    resolve();
+                }
             });
             
             this.socket.on('connect_error', (err) => {
                 console.error('连接失败:', err);
-                reject(err);
+                if (!settled) {
+                    settled = true;
+                    reject(err);
+                }
+            });
+
+            this.socket.on('disconnect', () => {
+                this.connected = false;
             });
             
             // 房间创建成功

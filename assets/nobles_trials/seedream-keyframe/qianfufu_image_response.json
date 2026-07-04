@@ -1,0 +1,4 @@
+{
+  "status": 415,
+  "body": "{\"error\":{\"message\":\"The output content is empty. This may be because the prompt or the attached image contains sensitive content. Please modify the content and try again. (request id: 20260618235625802280716iV8bjJXr)\",\"type\":\"server_error\",\"param\":\"\",\"code\":\"invalid_parameter\"}}"
+}

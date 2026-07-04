@@ -1,0 +1,26 @@
+{
+  "saber_artoria": {
+    "character": "saber_artoria",
+    "displayName": "Saber Artoria",
+    "nobleName": "Excalibur",
+    "referencePath": "assets/characters/saber_artoria-removebg-preview.png",
+    "referenceUrl": "https://d.uguu.se/WyqpMbRy.png",
+    "model": "sora-2",
+    "provider": "openai-video",
+    "payload": {
+      "model": "sora-2",
+      "prompt": "Anime game ultimate attack video, 6 seconds. Use the reference image as the exact character identity and costume base. Saber Artoria lifts a holy golden sword, a massive Excalibur beam tears across a dark battlefield, blue armor rim light, gold particles, cinematic camera push-in, dramatic wind, high contrast, clean 2D anime finish. Keep the face and outfit consistent with the reference image. No subtitles, no UI, no watermark.",
+      "size": "1280x720",
+      "seconds": "5",
+      "image_url": "https://d.uguu.se/WyqpMbRy.png"
+    },
+    "updatedAt": "2026-06-18T15:43:53.393Z",
+    "createStatusCode": 503,
+    "createResponse": {
+      "error": {
+        "message": "分组 default 下模型 sora-2 无可用渠道（distributor） (request id: 20260618234350116230334vFOpyls2)",
+        "type": "new_api_error"
+      }
+    }
+  }
+}

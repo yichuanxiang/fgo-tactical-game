@@ -1,0 +1,4 @@
+{
+  "status": 503,
+  "body": "{\"error\":{\"message\":\"分组 default 下模型 flux-kontext-pro 无可用渠道（distributor） (request id: 20260618235605856564568FPYPv5qv)\",\"type\":\"new_api_error\"}}"
+}

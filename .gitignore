@@ -1,0 +1,17 @@
+.env
+.env.*
+node_modules/
+.idea/
+android/.idea/
+android/.gradle/
+android/**/build/
+android/local.properties
+*.apk
+*.aab
+test_config.json
+test_vmess_config.json
+assets/nobles/qianfufu_tasks.json
+www/assets/nobles/qianfufu_tasks.json
+_codex_*.png
+_codex_*/
+.codex_*/
